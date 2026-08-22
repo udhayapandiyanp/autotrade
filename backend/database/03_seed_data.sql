@@ -22,9 +22,9 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 3. Insert Sample Vehicles (Draft and Published)
 INSERT INTO vehicles (id, seller_id, make, model, year, price, mileage, fuel_type, transmission, description, status) VALUES
-('a0000000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'Toyota', 'Camry', 2020, 21500.00, 32000, 'HYBRID', 'AUTOMATIC', 'Single-owner, fuel-efficient daily driver.', 'PUBLISHED'),
-('a0000000-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'Honda', 'Civic', 2018, 17900.00, 45000, 'PETROL', 'MANUAL', 'Reliable and sport civic. Clean maintenance record.', 'PUBLISHED'),
-('a0000000-0000-0000-0000-000000000003', '22222222-2222-2222-2222-222222222222', 'Tesla', 'Model 3', 2021, 35000.00, 15000, 'ELECTRIC', 'AUTOMATIC', 'Tesla Model 3 Long Range. Premium interior.', 'DRAFT')
+('a0000000-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222', 'Toyota', 'Camry', 2020, 2150000.00, 32000, 'HYBRID', 'AUTOMATIC', 'Single-owner, fuel-efficient daily driver.', 'PUBLISHED'),
+('a0000000-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222', 'Honda', 'Civic', 2018, 1490000.00, 45000, 'PETROL', 'MANUAL', 'Reliable and sport civic. Clean maintenance record.', 'PUBLISHED'),
+('a0000000-0000-0000-0000-000000000003', '22222222-2222-2222-2222-222222222222', 'Tesla', 'Model 3', 2021, 3500000.00, 15000, 'ELECTRIC', 'AUTOMATIC', 'Tesla Model 3 Long Range. Premium interior.', 'DRAFT')
 ON CONFLICT (id) DO NOTHING;
 
 -- 4. Insert Sample Vehicle Images

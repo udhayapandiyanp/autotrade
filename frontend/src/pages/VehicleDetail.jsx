@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { formatPrice } from '../utils/formatters';
 
 function VehicleDetail() {
   const { id } = useParams();
@@ -186,7 +187,7 @@ function VehicleDetail() {
           <div className="spec-header">
             <span className="spec-badge">{vehicle.status}</span>
             <h1>{vehicle.year} {vehicle.make} {vehicle.model}</h1>
-            <h2 className="spec-price">${vehicle.price.toLocaleString()}</h2>
+            <h2 className="spec-price">{formatPrice(vehicle.price)}</h2>
           </div>
 
           <div className="spec-grid">

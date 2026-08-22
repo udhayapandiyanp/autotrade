@@ -115,7 +115,7 @@ function Home() {
               </select>
             </div>
             <div className="input-group">
-              <label>Price Range ($)</label>
+              <label>Price Range (₹)</label>
               <div className="range-inputs">
                 <input type="number" value={minPrice} onChange={e => setMinPrice(e.target.value)} placeholder="Min" />
                 <input type="number" value={maxPrice} onChange={e => setMaxPrice(e.target.value)} placeholder="Max" />

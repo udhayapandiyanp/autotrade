@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import { formatPrice } from '../utils/formatters';
 
 function Favorites() {
   const [favorites, setFavorites] = useState([]);
@@ -58,7 +59,7 @@ function Favorites() {
             <div key={fav.id} className="vehicle-card">
               <div className="card-content">
                 <h3>{fav.make} {fav.model}</h3>
-                <span className="card-price">${fav.price.toLocaleString()}</span>
+                <span className="card-price">{formatPrice(fav.price)}</span>
                 <p className="card-meta">{fav.year} • {fav.mileage.toLocaleString()} mi</p>
                 <div className="table-actions" style={{ marginTop: '1rem' }}>
                   <Link to={`/vehicles/${fav.vehicleId}`} className="btn-view-details" style={{ flex: 2 }}>

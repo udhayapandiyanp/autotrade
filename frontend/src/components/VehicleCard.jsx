@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import { formatPrice } from '../utils/formatters';
 
 function VehicleCard({ vehicle }) {
   const [imageUrl, setImageUrl] = useState('/placeholder-car.jpg');
@@ -29,7 +30,7 @@ function VehicleCard({ vehicle }) {
       <div className="card-content">
         <div className="card-header">
           <h3>{vehicle.make} {vehicle.model}</h3>
-          <span className="card-price">${vehicle.price.toLocaleString()}</span>
+          <span className="card-price">{formatPrice(vehicle.price)}</span>
         </div>
         <p className="card-meta">
           <span>{vehicle.year}</span> • <span>{vehicle.transmission}</span> • <span>{vehicle.fuelType}</span>

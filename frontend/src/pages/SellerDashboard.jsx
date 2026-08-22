@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import { formatPrice } from '../utils/formatters';
 
 function SellerDashboard() {
   const [vehicles, setVehicles] = useState([]);
@@ -98,7 +99,7 @@ function SellerDashboard() {
                   <td>
                     <span className={`status-pill pill-${v.status.toLowerCase()}`}>{v.status}</span>
                   </td>
-                  <td>${v.price.toLocaleString()}</td>
+                  <td>{formatPrice(v.price)}</td>
                   <td>{v.year}</td>
                   <td>
                     <div className="table-actions">

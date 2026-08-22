@@ -4,13 +4,13 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- 1. Roles Table
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(50) UNIQUE NOT NULL
 );
 
 -- 2. Users Table (Acts as profile mapping auth.users id from Supabase or Custom Auth)
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL, -- Used if custom auth or fallback credentials are utilized
@@ -23,7 +23,7 @@ CREATE TABLE users (
 );
 
 -- 3. Vehicles Table
-CREATE TABLE vehicles (
+CREATE TABLE IF NOT EXISTS vehicles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     make VARCHAR(100) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE vehicles (
 );
 
 -- 4. Vehicle Images Table
-CREATE TABLE vehicle_images (
+CREATE TABLE IF NOT EXISTS vehicle_images (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
     image_url TEXT NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE vehicle_images (
 );
 
 -- 5. Favorites Table (Bookmarks mapping Users to Vehicles)
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
@@ -58,7 +58,7 @@ CREATE TABLE favorites (
 );
 
 -- 6. Vehicle Requests Table (Inquiries from Buyers to Sellers)
-CREATE TABLE vehicle_requests (
+CREATE TABLE IF NOT EXISTS vehicle_requests (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     buyer_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,
@@ -70,7 +70,7 @@ CREATE TABLE vehicle_requests (
 );
 
 -- 7. Notifications Table
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     recipient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title VARCHAR(255) NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE notifications (
 );
 
 -- 8. Reports Table (Moderation flags)
-CREATE TABLE reports (
+CREATE TABLE IF NOT EXISTS reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     reporter_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE CASCADE,

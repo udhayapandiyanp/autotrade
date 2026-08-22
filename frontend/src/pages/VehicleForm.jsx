@@ -123,8 +123,8 @@ function VehicleForm() {
               <input type="number" required value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2020" />
             </div>
             <div className="input-group">
-              <label>Asking Price ($)</label>
-              <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. 19500" />
+              <label>Asking Price (₹)</label>
+              <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. 500000" />
             </div>
           </div>
 
