@@ -49,6 +49,26 @@ public class DataInitializer implements CommandLineRunner {
             return roleRepository.save(r);
         });
 
+        // Only activate development accounts if their password hash is an unusable placeholder
+        userRepository.findByEmail("admin@dev.local").ifPresent(adminUser -> {
+            if (adminUser.getPasswordHash() != null && adminUser.getPasswordHash().contains("placeholder")) {
+                adminUser.setPasswordHash(passwordEncoder.encode("password123"));
+                userRepository.save(adminUser);
+            }
+        });
+        userRepository.findByEmail("buyer@dev.local").ifPresent(buyerUser -> {
+            if (buyerUser.getPasswordHash() != null && buyerUser.getPasswordHash().contains("placeholder")) {
+                buyerUser.setPasswordHash(passwordEncoder.encode("password123"));
+                userRepository.save(buyerUser);
+            }
+        });
+        userRepository.findByEmail("seller@dev.local").ifPresent(sellerUser -> {
+            if (sellerUser.getPasswordHash() != null && sellerUser.getPasswordHash().contains("placeholder")) {
+                sellerUser.setPasswordHash(passwordEncoder.encode("password123"));
+                userRepository.save(sellerUser);
+            }
+        });
+
         if (userRepository.count() == 0) {
             User seller = new User();
             seller.setEmail("seller@dev.local");
