@@ -32,3 +32,8 @@ dist/
 Thumbs.db
 ehthumbs.db
 Desktop.ini
+
+# Agent and nested directories
+.agents/
+autotrade/
+
