@@ -5,10 +5,32 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('authUser');
-    return savedUser ? JSON.parse(savedUser) : null;
+    try {
+      const savedUser = localStorage.getItem('authUser');
+      if (!savedUser || savedUser === 'undefined' || savedUser === 'null' || savedUser === '[object Object]') {
+        return null;
+      }
+      return JSON.parse(savedUser);
+    } catch (e) {
+      console.warn('Cleared corrupted authUser from localStorage:', e);
+      try { localStorage.removeItem('authUser'); } catch (_) {}
+      return null;
+    }
   });
-  const [token, setToken] = useState(() => localStorage.getItem('authToken'));
+
+  const [token, setToken] = useState(() => {
+    try {
+      const savedToken = localStorage.getItem('authToken');
+      if (!savedToken || savedToken === 'undefined' || savedToken === 'null' || savedToken === '[object Object]') {
+        return null;
+      }
+      return savedToken;
+    } catch (e) {
+      try { localStorage.removeItem('authToken'); } catch (_) {}
+      return null;
+    }
+  });
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
