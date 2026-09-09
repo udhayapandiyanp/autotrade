@@ -1,12 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { apiFetch } from '../services/api';
+import { 
+  Compass, 
+  Heart, 
+  MessageSquare, 
+  LayoutDashboard, 
+  Plus, 
+  ShieldAlert, 
+  Bell, 
+  LogOut, 
+  LogIn, 
+  Menu,
+  X
+} from 'lucide-react';
 
-function Navbar() {
+export default function Navbar() {
   const { user, logout, isAuthenticated, isSeller, isAdmin } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const fetchUnreadCount = async () => {
     if (isAuthenticated) {
@@ -14,15 +34,13 @@ function Navbar() {
         const count = await apiFetch('/notifications/unread-count');
         setUnreadCount(count || 0);
       } catch (err) {
-        // Silently ignore
+        // Silently ignore network issue
       }
     }
   };
 
   useEffect(() => {
     fetchUnreadCount();
-    
-    // Periodically poll (every 30 seconds) or listen to custom triggers
     const interval = setInterval(fetchUnreadCount, 30000);
     window.addEventListener('notification-update', fetchUnreadCount);
 
@@ -35,65 +53,232 @@ function Navbar() {
   const handleLogout = () => {
     logout();
     setUnreadCount(0);
-    navigate('/login');
+    navigate('/', { replace: true });
+  };
+
+  const getBrandTarget = () => {
+    if (!isAuthenticated) return '/';
+    if (isSeller) return '/seller/dashboard';
+    if (isAdmin) return '/admin/dashboard';
+    return '/buyer/dashboard';
+  };
+
+  const getUserInitials = () => {
+    if (!user) return 'U';
+    const first = user.firstName ? user.firstName[0] : '';
+    const last = user.lastName ? user.lastName[0] : '';
+    return (first + last).toUpperCase() || 'U';
   };
 
   return (
-    <nav className="navbar">
-      <div className="nav-container">
-        <Link to="/" className="nav-brand">
-          🚗 AutoTrade
+    <header className="navbar-root">
+      <div className="navbar-inner">
+        {/* Brand */}
+        <Link to={getBrandTarget()} className="navbar-brand" aria-label="MOLO Home">
+          <img 
+            src="/logo.png" 
+            alt="MOLO - Buy. Sell. Move." 
+            className="navbar-brand-logo" 
+          />
         </Link>
-        <div className="nav-links">
-          <Link to="/" className="nav-item">Browse</Link>
-          
+
+        {/* Desktop Navigation Links (Only shown when authenticated) */}
+        <nav className="navbar-nav-desktop" aria-label="Main Navigation">
           {isAuthenticated ? (
             <>
-              {/* Buyer specific links */}
+              {/* Buyer Links */}
               {!isSeller && !isAdmin && (
                 <>
-                  <Link to="/favorites" className="nav-item">Watchlist</Link>
-                  <Link to="/requests/buyer" className="nav-item">My Inquiries</Link>
+                  <NavLink 
+                    to="/buyer/dashboard" 
+                    className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}
+                  >
+                    <Compass size={16} />
+                    <span>Marketplace</span>
+                  </NavLink>
+                  <NavLink to="/favorites" className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}>
+                    <Heart size={16} />
+                    <span>Watchlist</span>
+                  </NavLink>
+                  <NavLink to="/requests/buyer" className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}>
+                    <MessageSquare size={16} />
+                    <span>My Inquiries</span>
+                  </NavLink>
                 </>
               )}
 
-              {/* Seller specific links */}
+              {/* Seller Links */}
               {isSeller && (
                 <>
-                  <Link to="/seller/dashboard" className="nav-item">Seller Dashboard</Link>
-                  <Link to="/requests/seller" className="nav-item">Received Inquiries</Link>
-                  <Link to="/seller/vehicles/new" className="nav-item button-primary">List Car</Link>
+                  <NavLink to="/seller/dashboard" className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}>
+                    <LayoutDashboard size={16} />
+                    <span>Dashboard</span>
+                  </NavLink>
+                  <NavLink to="/requests/seller" className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}>
+                    <MessageSquare size={16} />
+                    <span>Inquiries</span>
+                  </NavLink>
                 </>
               )}
 
-              {/* Admin specific links */}
+              {/* Admin Links */}
               {isAdmin && (
-                <Link to="/admin/dashboard" className="nav-item">Admin Dashboard</Link>
+                <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link-item ${isActive ? 'active' : ''}`}>
+                  <ShieldAlert size={16} />
+                  <span>Admin Console</span>
+                </NavLink>
               )}
 
-              {/* General Authenticated links */}
-              <Link to="/notifications" className="nav-item" style={{ position: 'relative' }}>
-                Notifications
+              {/* Alerts */}
+              <NavLink 
+                to="/notifications" 
+                className={({ isActive }) => `nav-link-item nav-link-alerts ${isActive ? 'active' : ''}`}
+                title="Notifications"
+              >
+                <div className="alerts-icon-wrap">
+                  <Bell size={16} />
+                  {unreadCount > 0 && <span className="alerts-dot-pulse" />}
+                </div>
+                <span>Alerts</span>
                 {unreadCount > 0 && (
-                  <span className="pill-badge primary-badge" style={{ marginLeft: '4px', position: 'absolute', top: '-10px', right: '-12px', fontSize: '0.65rem' }}>
-                    {unreadCount}
-                  </span>
+                  <span className="alerts-badge-pill">{unreadCount > 99 ? '99+' : unreadCount}</span>
                 )}
-              </Link>
+              </NavLink>
+            </>
+          ) : null}
+        </nav>
 
-              <span className="user-greeting">Hi, {user.firstName}</span>
-              <button onClick={handleLogout} className="btn-logout">Logout</button>
-            </>
+        {/* Right CTA / User Section */}
+        <div className="navbar-right-actions">
+          {isAuthenticated ? (
+            <div className="user-profile-group">
+              {isSeller && (
+                <Link to="/seller/vehicles/new" className="btn-navbar-primary">
+                  <Plus size={16} />
+                  <span>List Vehicle</span>
+                </Link>
+              )}
+
+              <div className="user-account-badge">
+                <div className="user-avatar-disc">{getUserInitials()}</div>
+                <div className="user-account-meta">
+                  <span className="user-fullname">{user.firstName}</span>
+                  <span className="user-role-tag">{user.role}</span>
+                </div>
+              </div>
+
+              <button 
+                type="button" 
+                onClick={handleLogout} 
+                className="btn-navbar-logout" 
+                title="Log out of AutoTrade"
+                aria-label="Log Out"
+              >
+                <LogOut size={16} />
+              </button>
+            </div>
           ) : (
-            <>
-              <Link to="/login" className="nav-item">Login</Link>
-              <Link to="/register" className="nav-item btn-register">Sign Up</Link>
-            </>
+            <div className="guest-cta-group">
+              <Link to="/" className="btn-navbar-primary">
+                <LogIn size={15} />
+                <span>Access Portal</span>
+              </Link>
+            </div>
           )}
+
+          {/* Mobile Hamburger Button */}
+          <button 
+            type="button" 
+            className="navbar-mobile-toggle" 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
         </div>
       </div>
-    </nav>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="navbar-mobile-menu">
+          {isAuthenticated ? (
+            <>
+              {!isSeller && !isAdmin && (
+                <>
+                  <NavLink 
+                    to="/buyer/dashboard" 
+                    className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}
+                  >
+                    <Compass size={18} />
+                    <span>Marketplace</span>
+                  </NavLink>
+                  <NavLink to="/favorites" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                    <Heart size={18} />
+                    <span>Watchlist</span>
+                  </NavLink>
+                  <NavLink to="/requests/buyer" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                    <MessageSquare size={18} />
+                    <span>My Inquiries</span>
+                  </NavLink>
+                </>
+              )}
+
+              {isSeller && (
+                <>
+                  <NavLink to="/seller/dashboard" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                    <LayoutDashboard size={18} />
+                    <span>Seller Dashboard</span>
+                  </NavLink>
+                  <NavLink to="/requests/seller" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                    <MessageSquare size={18} />
+                    <span>Buyer Inquiries</span>
+                  </NavLink>
+                  <Link to="/seller/vehicles/new" className="mobile-nav-link mobile-cta-link">
+                    <Plus size={18} />
+                    <span>List a Vehicle for Sale</span>
+                  </Link>
+                </>
+              )}
+
+              {isAdmin && (
+                <NavLink to="/admin/dashboard" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                  <ShieldAlert size={18} />
+                  <span>Admin Moderation Console</span>
+                </NavLink>
+              )}
+
+              <NavLink to="/notifications" className={({ isActive }) => `mobile-nav-link ${isActive ? 'active' : ''}`}>
+                <Bell size={18} />
+                <span>Notifications & Alerts {unreadCount > 0 && `(${unreadCount})`}</span>
+              </NavLink>
+
+              <div className="mobile-user-row">
+                <div className="user-avatar-disc">{getUserInitials()}</div>
+                <div>
+                  <div className="user-fullname">{user.firstName} {user.lastName}</div>
+                  <div className="user-role-tag">{user.role}</div>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={handleLogout} 
+                  className="btn-navbar-logout" 
+                  style={{ marginLeft: 'auto' }}
+                  aria-label="Sign Out"
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="mobile-guest-buttons">
+              <Link to="/" className="btn-navbar-primary" style={{ textAlign: 'center', justifyContent: 'center' }}>
+                <LogIn size={18} />
+                <span>Access Portal</span>
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+    </header>
   );
 }
-
-export default Navbar;
