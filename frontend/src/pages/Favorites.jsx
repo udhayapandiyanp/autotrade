@@ -2,8 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { formatPrice } from '../utils/formatters';
+import EmptyState from '../components/EmptyState';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { 
+  Heart, 
+  Trash2, 
+  ArrowRight, 
+  Car, 
+  Calendar, 
+  Gauge, 
+  CheckCircle, 
+  AlertCircle,
+  ExternalLink 
+} from 'lucide-react';
 
-function Favorites() {
+export default function Favorites() {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,7 +29,7 @@ function Favorites() {
       const data = await apiFetch('/favorites');
       setFavorites(data || []);
     } catch (err) {
-      setError(err.message || 'Failed to retrieve favorites watchlist.');
+      setError(err.message || 'Failed to retrieve saved watchlist.');
     } finally {
       setLoading(false);
     }
@@ -30,7 +43,7 @@ function Favorites() {
     setFeedback('');
     try {
       await apiFetch(`/favorites/${vehicleId}`, { method: 'DELETE' });
-      setFeedback('Removed from watchlist.');
+      setFeedback('Vehicle removed from your saved watchlist.');
       fetchFavorites();
     } catch (err) {
       setError(err.message || 'Failed to remove favorite.');
@@ -38,44 +51,103 @@ function Favorites() {
   };
 
   return (
-    <div className="favorites-container">
-      <h1>My Watchlist</h1>
-      <p>Track listings you are interested in</p>
-      
-      {feedback && <div className="success-banner">{feedback}</div>}
-      {error && <div className="error-banner">{error}</div>}
-
-      {loading ? (
-        <div className="loading-spinner">Loading watchlist...</div>
-      ) : favorites.length === 0 ? (
-        <div className="empty-state">
-          <h3>Your watchlist is empty.</h3>
-          <p>Browse the catalog and add vehicles to your favorites!</p>
-          <Link to="/" className="btn-back">Browse Vehicles</Link>
+    <div className="workspace-page-root">
+      <div className="workspace-container">
+        {/* Header Strip */}
+        <div className="workspace-header-bar">
+          <div>
+            <div className="workspace-eyebrow">Buyer Workspace</div>
+            <h1 className="workspace-title">Saved Watchlist</h1>
+            <p className="workspace-desc">
+              Track vehicle availability, compare specifications, and send direct seller inquiries
+            </p>
+          </div>
+          <Link to="/buyer/dashboard" className="btn-secondary-action">
+            <Car size={16} />
+            <span>Browse More Cars</span>
+          </Link>
         </div>
-      ) : (
-        <div className="vehicle-grid">
-          {favorites.map(fav => (
-            <div key={fav.id} className="vehicle-card">
-              <div className="card-content">
-                <h3>{fav.make} {fav.model}</h3>
-                <span className="card-price">{formatPrice(fav.price)}</span>
-                <p className="card-meta">{fav.year} • {fav.mileage.toLocaleString()} mi</p>
-                <div className="table-actions" style={{ marginTop: '1rem' }}>
-                  <Link to={`/vehicles/${fav.vehicleId}`} className="btn-view-details" style={{ flex: 2 }}>
-                    View Specs
-                  </Link>
-                  <button onClick={() => handleRemove(fav.vehicleId)} className="btn-table-action btn-archive" style={{ flex: 1 }}>
-                    Remove
-                  </button>
+
+        {/* Feedback Alert */}
+        {feedback && (
+          <div className="toast-banner toast-success">
+            <CheckCircle size={18} />
+            <span>{feedback}</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="toast-banner toast-error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <LoadingSkeleton type="card" count={3} />
+        ) : favorites.length === 0 ? (
+          <EmptyState 
+            icon={Heart}
+            title="Your Watchlist is Empty"
+            description="You have not saved any vehicle listings yet. Click the heart icon on any vehicle card to monitor it here."
+            action={
+              <Link to="/buyer/dashboard" className="btn-primary-action">
+                <span>Explore Marketplace</span>
+                <ArrowRight size={16} />
+              </Link>
+            }
+          />
+        ) : (
+          <div className="favorites-cards-grid">
+            {favorites.map(fav => (
+              <div key={fav.id} className="favorite-item-card">
+                <div className="favorite-card-body">
+                  <div className="favorite-top-row">
+                    <div>
+                      <span className="favorite-year-tag">{fav.year}</span>
+                      <h3 className="favorite-title">
+                        {fav.make} {fav.model}
+                      </h3>
+                    </div>
+                    <div className="favorite-price-text">
+                      {formatPrice(fav.price)}
+                    </div>
+                  </div>
+
+                  <div className="favorite-specs-row">
+                    <div className="favorite-spec">
+                      <Calendar size={13} />
+                      <span>{fav.year}</span>
+                    </div>
+                    <div className="favorite-spec">
+                      <Gauge size={13} />
+                      <span>{fav.mileage ? Number(fav.mileage).toLocaleString() : '0'} mi</span>
+                    </div>
+                  </div>
+
+                  <div className="favorite-actions-row">
+                    <Link to={`/vehicles/${fav.vehicleId}`} className="btn-primary-action" style={{ flex: 2, justifyContent: 'center' }}>
+                      <span>View Showroom</span>
+                      <ExternalLink size={14} />
+                    </Link>
+
+                    <button 
+                      type="button"
+                      onClick={() => handleRemove(fav.vehicleId)} 
+                      className="btn-danger-outline"
+                      title="Remove from watchlist"
+                    >
+                      <Trash2 size={15} />
+                      <span>Remove</span>
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
-
-export default Favorites;
