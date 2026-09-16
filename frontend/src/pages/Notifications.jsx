@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { apiFetch } from '../services/api';
+import EmptyState from '../components/EmptyState';
+import LoadingSkeleton from '../components/LoadingSkeleton';
+import { 
+  Bell, 
+  CheckCheck, 
+  Check, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle 
+} from 'lucide-react';
 
-function Notifications() {
+export default function Notifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,7 +38,6 @@ function Notifications() {
     try {
       await apiFetch(`/notifications/${notifId}/read`, { method: 'PATCH' });
       fetchNotifications();
-      // Dispatch event to update unread badge count in Navbar
       window.dispatchEvent(new Event('notification-update'));
     } catch (err) {
       setError(err.message || 'Failed to mark notification as read.');
@@ -42,66 +51,98 @@ function Notifications() {
       await apiFetch('/notifications/read-all', { method: 'PATCH' });
       setFeedback('All notifications marked as read.');
       fetchNotifications();
-      // Update Navbar count
       window.dispatchEvent(new Event('notification-update'));
     } catch (err) {
       setError(err.message || 'Failed to resolve notification operations.');
     }
   };
 
+  const unreadExist = notifications.some(n => !n.isRead);
+
   return (
-    <div className="manager-card" style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div className="manager-header">
-        <h2>Notifications</h2>
-        {notifications.some(n => !n.isRead) && (
-          <button onClick={handleMarkAllAsRead} className="btn-add-img" style={{ background: '#10b981' }}>
-            Mark All Read
-          </button>
+    <div className="workspace-page-root">
+      <div className="workspace-container" style={{ maxWidth: '960px' }}>
+        {/* Header */}
+        <div className="workspace-header-bar">
+          <div>
+            <div className="workspace-eyebrow">Communications</div>
+            <h1 className="workspace-title">Notifications & Alerts</h1>
+            <p className="workspace-desc">
+              Stay updated on vehicle inquiries, listing status transitions, and moderation alerts
+            </p>
+          </div>
+          {unreadExist && (
+            <button type="button" onClick={handleMarkAllAsRead} className="btn-secondary-action">
+              <CheckCheck size={16} />
+              <span>Mark All as Read</span>
+            </button>
+          )}
+        </div>
+
+        {feedback && (
+          <div className="toast-banner toast-success">
+            <CheckCircle size={18} />
+            <span>{feedback}</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="toast-banner toast-error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {loading ? (
+          <LoadingSkeleton type="card" count={3} />
+        ) : notifications.length === 0 ? (
+          <EmptyState 
+            icon={Bell}
+            title="You're All Caught Up"
+            description="There are no pending alerts or inquiries. New messages from buyers or sellers will appear here."
+          />
+        ) : (
+          <div className="notifications-feed-list">
+            {notifications.map(n => (
+              <div 
+                key={n.id} 
+                className={`notification-feed-item ${!n.isRead ? 'is-unread' : ''}`}
+              >
+                <div className="notif-icon-col">
+                  <div className={`notif-icon-circle ${!n.isRead ? 'circle-active' : ''}`}>
+                    <Bell size={16} />
+                  </div>
+                </div>
+
+                <div className="notif-content-col">
+                  <div className="notif-header-row">
+                    <h3 className="notif-title">{n.title}</h3>
+                    <div className="notif-time">
+                      <Clock size={12} />
+                      <span>{new Date(n.createdAt).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <p className="notif-message">{n.content}</p>
+
+                  {!n.isRead && (
+                    <div className="notif-action-row">
+                      <button 
+                        type="button" 
+                        onClick={() => handleMarkAsRead(n.id)} 
+                        className="btn-mark-read"
+                      >
+                        <Check size={13} />
+                        <span>Mark as read</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
-
-      {feedback && <div className="success-banner">{feedback}</div>}
-      {error && <div className="error-banner">{error}</div>}
-
-      {loading ? (
-        <div className="loading-spinner">Loading notifications...</div>
-      ) : notifications.length === 0 ? (
-        <div className="empty-state">You do not have any notifications.</div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', textAlign: 'left' }}>
-          {notifications.map(n => (
-            <div 
-              key={n.id} 
-              className="info-box" 
-              style={{
-                borderLeft: n.isRead ? '2px solid rgba(255, 255, 255, 0.05)' : '4px solid #3b82f6',
-                background: n.isRead ? 'rgba(15, 23, 42, 0.3)' : 'rgba(15, 23, 42, 0.6)',
-                padding: '1.25rem',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center'
-              }}
-            >
-              <div>
-                <h4 style={{ color: n.isRead ? '#cbd5e1' : '#f8fafc', marginBottom: '0.25rem' }}>{n.title}</h4>
-                <p style={{ color: '#94a3b8', fontSize: '0.9rem', marginBottom: '0.5rem' }}>{n.content}</p>
-                <small style={{ color: '#64748b' }}>{new Date(n.createdAt).toLocaleString()}</small>
-              </div>
-              {!n.isRead && (
-                <button 
-                  onClick={() => handleMarkAsRead(n.id)} 
-                  className="btn-table-action btn-edit"
-                  style={{ whiteSpace: 'nowrap', marginLeft: '1.5rem' }}
-                >
-                  Mark Read
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
-
-export default Notifications;
