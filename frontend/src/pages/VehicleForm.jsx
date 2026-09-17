@@ -1,8 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import { formatPrice } from '../utils/formatters';
+import { 
+  Save, 
+  ArrowLeft, 
+  AlertCircle,
+  Car,
+  Fuel,
+  Settings2,
+  Calendar,
+  DollarSign,
+  Gauge,
+  FileText
+} from 'lucide-react';
 
-function VehicleForm() {
+export default function VehicleForm() {
   const { id } = useParams();
   const isEditMode = !!id;
   const navigate = useNavigate();
@@ -17,12 +30,13 @@ function VehicleForm() {
   const [description, setDescription] = useState('');
 
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEditMode);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (isEditMode) {
       const fetchVehicleData = async () => {
-        setLoading(true);
+        setFetching(true);
         try {
           const v = await apiFetch(`/vehicles/${id}`);
           setMake(v.make);
@@ -34,9 +48,9 @@ function VehicleForm() {
           setTransmission(v.transmission);
           setDescription(v.description || '');
         } catch (err) {
-          setError(err.message || 'Failed to retrieve listing details.');
+          setError(err.message || 'Failed to retrieve vehicle details.');
         } finally {
-          setLoading(false);
+          setFetching(false);
         }
       };
       fetchVehicleData();
@@ -47,21 +61,21 @@ function VehicleForm() {
     e.preventDefault();
     setError('');
 
-    // Frontend validations
     const numPrice = parseFloat(price);
     const numMileage = parseInt(mileage, 10);
     const numYear = parseInt(year, 10);
 
-    if (isNaN(numPrice) || numPrice < 0) {
-      setError('Price cannot be negative.');
+    if (isNaN(numPrice) || numPrice <= 0) {
+      setError('Please provide a valid asking price greater than zero.');
       return;
     }
     if (isNaN(numMileage) || numMileage < 0) {
-      setError('Mileage cannot be negative.');
+      setError('Odometer mileage cannot be negative.');
       return;
     }
-    if (isNaN(numYear) || numYear < 1886 || numYear > new Date().getFullYear() + 1) {
-      setError('Please provide a valid manufacturing year.');
+    const currentYear = new Date().getFullYear();
+    if (isNaN(numYear) || numYear < 1900 || numYear > currentYear + 1) {
+      setError(`Please specify a valid manufacturing year between 1900 and ${currentYear + 1}.`);
       return;
     }
 
@@ -91,89 +105,205 @@ function VehicleForm() {
       }
       navigate('/seller/dashboard');
     } catch (err) {
-      setError(err.message || 'Failed to save vehicle details.');
+      setError(err.message || 'Failed to save vehicle specifications.');
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) {
+    return (
+      <div className="workspace-page-root">
+        <div className="workspace-container" style={{ maxWidth: '820px' }}>
+          <div className="form-card-panel" style={{ padding: '3rem 2rem', textAlign: 'center' }}>
+            <p style={{ color: 'var(--text-muted)' }}>Loading vehicle specifications...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="form-page-container">
-      <div className="form-card">
-        <h2>{isEditMode ? 'Edit Vehicle Specifications' : 'List a New Vehicle'}</h2>
-        <p className="form-subtitle">Fill in specifications to advertise your car</p>
-
-        {error && <div className="error-banner">{error}</div>}
-
-        <form onSubmit={handleSubmit} className="spec-form">
-          <div className="form-row">
-            <div className="input-group">
-              <label>Make</label>
-              <input type="text" required value={make} onChange={e => setMake(e.target.value)} placeholder="e.g. Toyota" />
-            </div>
-            <div className="input-group">
-              <label>Model</label>
-              <input type="text" required value={model} onChange={e => setModel(e.target.value)} placeholder="e.g. Camry" />
-            </div>
+    <div className="workspace-page-root">
+      <div className="workspace-container" style={{ maxWidth: '860px' }}>
+        {/* Header Strip */}
+        <div className="workspace-header-bar" style={{ marginBottom: '1.75rem' }}>
+          <div>
+            <Link to="/seller/dashboard" className="form-back-nav">
+              <ArrowLeft size={15} />
+              <span>Back to Inventory</span>
+            </Link>
+            <h1 className="workspace-title" style={{ marginTop: '0.5rem' }}>
+              {isEditMode ? 'Edit Vehicle Specifications' : 'List a Vehicle for Sale'}
+            </h1>
+            <p className="workspace-desc">
+              Provide accurate technical parameters and pricing to attract qualified buyers
+            </p>
           </div>
+        </div>
 
-          <div className="form-row">
-            <div className="input-group">
-              <label>Manufacturing Year</label>
-              <input type="number" required value={year} onChange={e => setYear(e.target.value)} placeholder="e.g. 2020" />
-            </div>
-            <div className="input-group">
-              <label>Asking Price (₹)</label>
-              <input type="number" step="0.01" required value={price} onChange={e => setPrice(e.target.value)} placeholder="e.g. 500000" />
-            </div>
+        {error && (
+          <div className="toast-banner toast-error">
+            <AlertCircle size={18} />
+            <span>{error}</span>
           </div>
+        )}
 
-          <div className="form-row">
-            <div className="input-group">
-              <label>Odometer Mileage (mi)</label>
-              <input type="number" required value={mileage} onChange={e => setMileage(e.target.value)} placeholder="e.g. 45000" />
+        {/* Structured Form Panel */}
+        <div className="form-card-panel">
+          <form onSubmit={handleSubmit} className="vehicle-edit-form">
+            {/* Make & Model */}
+            <div className="form-two-cols">
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <Car size={14} />
+                  <span>Vehicle Make / Brand</span>
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  value={make} 
+                  onChange={e => setMake(e.target.value)} 
+                  placeholder="e.g. Porsche, BMW, Toyota" 
+                  className="unit-input"
+                />
+              </div>
+
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <Car size={14} />
+                  <span>Vehicle Model</span>
+                </label>
+                <input 
+                  type="text" 
+                  required 
+                  value={model} 
+                  onChange={e => setModel(e.target.value)} 
+                  placeholder="e.g. 911 Carrera, M3 Competition" 
+                  className="unit-input"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="form-row">
-            <div className="input-group">
-              <label>Fuel Type</label>
-              <select value={fuelType} onChange={e => setFuelType(e.target.value)}>
-                <option value="PETROL">Petrol</option>
-                <option value="DIESEL">Diesel</option>
-                <option value="ELECTRIC">Electric</option>
-                <option value="HYBRID">Hybrid</option>
+            {/* Year & Price */}
+            <div className="form-two-cols">
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <Calendar size={14} />
+                  <span>Manufacturing Year</span>
+                </label>
+                <input 
+                  type="number" 
+                  required 
+                  value={year} 
+                  onChange={e => setYear(e.target.value)} 
+                  placeholder="e.g. 2022" 
+                  className="unit-input"
+                />
+              </div>
+
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <DollarSign size={14} />
+                  <span>Asking Price (₹) {price ? <span className="price-preview-tag">≈ {formatPrice(price)}</span> : null}</span>
+                </label>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  required 
+                  value={price} 
+                  onChange={e => setPrice(e.target.value)} 
+                  placeholder="e.g. 2500000" 
+                  className="unit-input"
+                />
+              </div>
+            </div>
+
+            {/* Mileage & Fuel Type */}
+            <div className="form-two-cols">
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <Gauge size={14} />
+                  <span>Odometer Mileage (mi)</span>
+                </label>
+                <input 
+                  type="number" 
+                  required 
+                  value={mileage} 
+                  onChange={e => setMileage(e.target.value)} 
+                  placeholder="e.g. 18500" 
+                  className="unit-input"
+                />
+              </div>
+
+              <div className="form-group-unit">
+                <label className="unit-label">
+                  <Fuel size={14} />
+                  <span>Powertrain / Fuel Type</span>
+                </label>
+                <select 
+                  value={fuelType} 
+                  onChange={e => setFuelType(e.target.value)}
+                  className="unit-select"
+                >
+                  <option value="PETROL">Petrol</option>
+                  <option value="DIESEL">Diesel</option>
+                  <option value="ELECTRIC">Electric (EV)</option>
+                  <option value="HYBRID">Hybrid</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Transmission */}
+            <div className="form-group-unit">
+              <label className="unit-label">
+                <Settings2 size={14} />
+                <span>Transmission</span>
+              </label>
+              <select 
+                value={transmission} 
+                onChange={e => setTransmission(e.target.value)}
+                className="unit-select"
+              >
+                <option value="AUTOMATIC">Automatic Transmission</option>
+                <option value="MANUAL">Manual Transmission</option>
               </select>
             </div>
-            <div className="input-group">
-              <label>Transmission</label>
-              <select value={transmission} onChange={e => setTransmission(e.target.value)}>
-                <option value="AUTOMATIC">Automatic</option>
-                <option value="MANUAL">Manual</option>
-              </select>
+
+            {/* Description */}
+            <div className="form-group-unit">
+              <label className="unit-label">
+                <FileText size={14} />
+                <span>Vehicle Overview & Condition Notes</span>
+              </label>
+              <textarea 
+                rows="4" 
+                value={description} 
+                onChange={e => setDescription(e.target.value)} 
+                placeholder="Highlight recent service history, vehicle options, tire wear, warranty status, modifications..."
+                className="unit-textarea"
+              />
             </div>
-          </div>
 
-          <div className="input-group">
-            <label>Detailed Description</label>
-            <textarea 
-              rows="4" 
-              value={description} 
-              onChange={e => setDescription(e.target.value)} 
-              placeholder="Detail modifications, condition, service history..."
-            />
-          </div>
+            {/* Action Buttons */}
+            <div className="form-submit-row">
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="btn-primary-action"
+                style={{ flex: 1, justifyContent: 'center' }}
+              >
+                <Save size={16} />
+                <span>{loading ? 'Saving Listing...' : isEditMode ? 'Update Vehicle' : 'Save & Continue to Inventory'}</span>
+              </button>
 
-          <div className="form-buttons">
-            <button type="submit" disabled={loading} className="btn-save">
-              {loading ? 'Saving...' : 'Save Listing'}
-            </button>
-            <Link to="/seller/dashboard" className="btn-cancel">Cancel</Link>
-          </div>
-        </form>
+              <Link to="/seller/dashboard" className="btn-secondary-action">
+                Cancel
+              </Link>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 }
-
-export default VehicleForm;
