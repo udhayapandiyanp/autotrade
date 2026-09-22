@@ -330,7 +330,7 @@ JWT_EXPIRATION_MS=86400000
 ### Frontend Configuration
 Create `frontend/.env` based on `frontend/.env.example`:
 ```env
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8081/api
 ```
 
 ---
