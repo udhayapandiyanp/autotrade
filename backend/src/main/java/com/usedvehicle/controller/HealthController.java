@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 public class HealthController {
 
     private final HealthService healthService;
@@ -18,7 +17,7 @@ public class HealthController {
         this.healthService = healthService;
     }
 
-    @GetMapping("/health")
+    @GetMapping({"/", "/api/health"})
     public ResponseEntity<Map<String, String>> getHealth() {
         return ResponseEntity.ok(healthService.getHealthStatus());
     }

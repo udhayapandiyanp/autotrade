@@ -49,7 +49,7 @@ public class SecurityConfig {
                 })
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/health").permitAll()
+                .requestMatchers("/", "/api/health").permitAll()
                 .requestMatchers("/api/vehicles/test").permitAll()
                 .requestMatchers("/api/auth/register").permitAll()
                 .requestMatchers("/api/auth/login").permitAll()
