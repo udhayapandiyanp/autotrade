@@ -2,6 +2,9 @@
 FROM maven:3.9-eclipse-temurin-17 AS build
 WORKDIR /app
 
+# Configure Maven to use Google Cloud mirror for Maven Central (prevents 429 rate limiting)
+COPY settings.xml /root/.m2/settings.xml
+
 # Copy pom.xml and source code
 COPY pom.xml .
 COPY src ./src
